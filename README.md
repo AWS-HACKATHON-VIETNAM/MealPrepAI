@@ -44,7 +44,7 @@ MealPrepAI is a Django REST API that powers recipe generation, grocery managemen
 
 4. **Configure PostgreSQL** (match the credentials in `.env`):
    ```bash
-   # Create database role (skip if it already exists)
+   # Create database role (skip if already exists)
    createuser postgres --superuser --pwprompt
 
    # Create the application database
@@ -56,8 +56,6 @@ MealPrepAI is a Django REST API that powers recipe generation, grocery managemen
    - password: `password`
    - host: `localhost`
    - port: `5432`
-
-   Adjust these values in `.env` (and in PostgreSQL) if you prefer a different setup. Boto3 will automatically pick up AWS credentials from environment variables or your local AWS profile. If you do not supply FairPrice credentials, the code falls back to mock grocery data.
 
 5. **Apply migrations**
    ```bash
