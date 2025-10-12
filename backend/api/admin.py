@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Recipe, UserSavedRecipe, GroceryList, MealHistory
+from .models import Recipe, UserSavedRecipe, GroceryList, GroceryItem, MealHistory
 
 
 @admin.register(Recipe)
@@ -25,9 +25,23 @@ class UserSavedRecipeAdmin(admin.ModelAdmin):
 
 @admin.register(GroceryList)
 class GroceryListAdmin(admin.ModelAdmin):
-    list_display = ("user", "ingredient_name", "quantity", "price", "added_at")
-    list_filter = ("added_at",)
-    search_fields = ("user__email", "ingredient_name")
+    list_display = ("user", "name", "created_at")
+    list_filter = ("created_at",)
+    search_fields = ("user__email", "name")
+
+
+@admin.register(GroceryItem)
+class GroceryItemAdmin(admin.ModelAdmin):
+    list_display = (
+        "grocery_list",
+        "ingredient",
+        "quantity",
+        "price",
+        "macros",
+        "created_at",
+    )
+    list_filter = ("created_at",)
+    search_fields = ("grocery_list__name", "ingredient__name")
 
 
 @admin.register(MealHistory)

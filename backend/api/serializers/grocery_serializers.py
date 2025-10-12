@@ -13,7 +13,6 @@ class GroceryItemSerializer(serializers.ModelSerializer):
             "grocery_list",
             "ingredient",
             "quantity",
-            "unit",
             "price",
             "macros",
             "created_at",
