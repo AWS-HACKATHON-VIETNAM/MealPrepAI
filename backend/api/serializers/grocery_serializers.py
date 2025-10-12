@@ -1,14 +1,17 @@
-from rest_framework import serializers
-from ..models import UserGroceryList
+from rest_framework import serializers  # type: ignore
+from ..models import GroceryList, GroceryItem
 
 
-class UserGroceryListSerializer(serializers.ModelSerializer):
-    """Serializer for UserGroceryList model"""
-    
+class GroceryItemSerializer(serializers.ModelSerializer):
     class Meta:
-        model = UserGroceryList
-        fields = [
-            'id', 'ingredient_name', 'quantity', 'price', 
-            'macros', 'added_at'
-        ]
-        read_only_fields = ('id', 'added_at')
+        model = GroceryItem
+        fields = ["id", "grocery_list", "ingredient", "quantity", "unit"]
+
+
+class GroceryListSerializer(serializers.ModelSerializer):
+    items = GroceryItemSerializer(many=True, read_only=True)  # nested readback
+
+    class Meta:
+        model = GroceryList
+        fields = ["id", "user", "name", "created_at", "items"]
+        read_only_fields = ["id", "created_at", "items"]
