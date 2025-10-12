@@ -1,4 +1,4 @@
 from .recipe_serializers import RecipeSerializer, UserSavedRecipeSerializer
-from .grocery_serializers import UserGroceryListSerializer
+from .grocery_serializers import GroceryListSerializer
 
-__all__ = ['RecipeSerializer', 'UserSavedRecipeSerializer', 'UserGroceryListSerializer']
+__all__ = ["RecipeSerializer", "SavedRecipeSerializer", "GroceryListSerializer"]
