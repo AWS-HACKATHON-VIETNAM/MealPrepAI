@@ -7,13 +7,14 @@ from .recipe_views import (
 )
 from .grocery_views import (
     search_grocery_items,
-    get_grocery_list,
-    add_to_grocery_list,
-    remove_from_grocery_list
+    grocery_lists,
+    grocery_list_detail,
+    grocery_items,
+    grocery_item_detail,
 )
 
 __all__ = [
     'generate_recipe', 'suggest_recipes_from_pantry', 'save_recipe', 
     'get_saved_recipes', 'delete_saved_recipe',
-    'search_grocery_items', 'get_grocery_list', 'add_to_grocery_list', 'remove_from_grocery_list'
+    'search_grocery_items', 'grocery_lists', 'grocery_list_detail', 'grocery_items', 'grocery_item_detail'
 ]

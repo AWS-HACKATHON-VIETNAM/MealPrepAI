@@ -101,10 +101,17 @@ All endpoints below are namespaced under `http://127.0.0.1:8000/api/v1/`. JWT au
 
 ### Groceries (`api.views.grocery_views`)
 
-- `GET groceries/search/?query=<term>` – proxy to the FairPrice API (or mock data) for ingredient search results.
-- `GET groceries/list/` – list the caller’s stored grocery/pantry items.
-- `POST groceries/list/` – add a new grocery item. Body should include `ingredient_name`, `quantity`, and optional `price`/`macros`.
-- `DELETE groceries/list/<item_id>/` – remove a grocery item from the list.
+- `GET grocery/search/?query=<term>` – proxy to the FairPrice API (or mock data) for ingredient search results.
+- `GET grocery/grocery-list/` – list all grocery lists owned by the caller.
+- `POST grocery/grocery-list/` – create a new named grocery list for the caller.
+- `GET grocery/grocery-list/<id>/` – retrieve a specific grocery list (includes nested items).
+- `PUT grocery/grocery-list/<id>/` – update the name of a grocery list.
+- `DELETE grocery/grocery-list/<id>/` – delete a grocery list and its items.
+- `GET grocery/grocery-item/?grocery_list=<id>` – list grocery items (optionally filter by list).
+- `POST grocery/grocery-item/` – add a new item; body must include `grocery_list`, `ingredient`, `quantity`, `unit`, and optional `price`/`macros`.
+- `GET grocery/grocery-item/<id>/` – retrieve a specific grocery item.
+- `PUT grocery/grocery-item/<id>/` – update a grocery item (including moving it between lists you own).
+- `DELETE grocery/grocery-item/<id>/` – remove a grocery item from the list.
 
 ## External Integrations
 
