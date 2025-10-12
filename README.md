@@ -58,7 +58,7 @@ personal-chef-app/
 
 1. **Navigate to backend directory:**
    ```bash
-   cd personal-chef-app/backend
+   cd backend/
    ```
 
 2. **Create and activate virtual environment:**
@@ -97,7 +97,7 @@ personal-chef-app/
 
 1. **Navigate to frontend directory:**
    ```bash
-   cd personal-chef-app/frontend
+   cd frontend/
    ```
 
 2. **Install dependencies:**
