@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from ..serializers import UserRegistrationSerializer, UserProfileSerializer
+from ..models import UserProfile
 
 
 @api_view(["POST"])
@@ -66,6 +67,30 @@ def get_profile(request):
             {"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND
         )
 
+# @api_view(['GET', 'PUT']) # Allow both methods
+# @permission_classes([IsAuthenticated])
+# def get_profile(request):
+#     """
+#     Handles retrieving the full profile (GET) and 
+#     updating user details like name (PUT).
+#     """
+#     if request.method == 'GET':
+#         try:
+#             # Use UserProfileSerializer to get combined data
+#             profile = request.user.profile
+#             serializer = UserProfileSerializer(profile)
+#             return Response(serializer.data, status=status.HTTP_200_OK)
+#         except UserProfile.DoesNotExist:
+#             return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
+
+#     elif request.method == 'PUT':
+#         # Use UserSerializer to update User model fields
+#         user = request.user
+#         serializer = UserRegistrationSerializer(user, data=request.data, partial=True)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_200_OK)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
