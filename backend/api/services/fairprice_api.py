@@ -6,10 +6,10 @@ from pandas.core.tools.numeric import to_numeric
 def search_grocery_items(query):
     """
     Search for grocery items on NTUC FairPrice
-    
+
     Args:
         query (str): Search query for grocery items
-    
+
     Returns:
         list: List of grocery items with price and measurement info
     """

@@ -17,7 +17,11 @@ class GroceryItem(models.Model):
     """An item in a user's grocery list or pantry"""
 
     grocery_list = models.ForeignKey(
-        GroceryList, related_name="items", on_delete=models.CASCADE
+        GroceryList,
+        related_name="items",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
     ingredient = models.CharField(max_length=255)
     quantity = models.CharField(max_length=100)  # e.g., "500g", "1 can"
@@ -28,4 +32,5 @@ class GroceryItem(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.ingredient} ({self.quantity}) in {self.grocery_list.name}"
+        list_name = self.grocery_list.name if self.grocery_list else "No List"
+        return f"{self.ingredient} ({self.quantity}) in {list_name}"

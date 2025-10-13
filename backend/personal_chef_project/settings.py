@@ -147,4 +147,3 @@ CORS_ALLOW_CREDENTIALS = True
 
 # External API Keys
 AWS_BEDROCK_REGION = config("AWS_BEDROCK_REGION", default="us-east-1")
-FAIRPRICE_API_KEY = config("FAIRPRICE_API_KEY", default="your-fairprice-api-key")

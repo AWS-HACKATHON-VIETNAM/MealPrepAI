@@ -10,7 +10,7 @@ MealPrepAI is a Django REST API that powers recipe generation, grocery managemen
 - **User registration/sign-in** happens through `users.views`. New accounts create both a `User` and an associated `UserProfile`, and successful calls return SimpleJWT access/refresh tokens.
 - **Profile data** (goals, preferences, allergies) is stored on `UserProfile` and is pulled into downstream requests so AI-generated recipes can respect dietary needs.
 - **Recipe endpoints** in `api.views.recipe_views` call out to AWS Bedrock through `api.services.aws_bedrock`. Responses are expected to be JSON payloads describing a single recipe or a small list of recipes, which are then stored in the local `Recipe` and `UserSavedRecipe` tables when persisted.
-- **Grocery endpoints** in `api.views.grocery_views` search the FairPrice API (or fall back to mock data) and maintain the `UserGroceryList` table so pantry contents can be reused for recipe suggestions.
+- **Grocery endpoints** in `api.views.grocery_views` allow users to create named grocery lists and add/remove items.
 - **Database access** is handled entirely by Django’s ORM. PostgreSQL connection settings are loaded from the `.env` file and initialised when the project boots.
 
 ## Prerequisites
@@ -18,7 +18,6 @@ MealPrepAI is a Django REST API that powers recipe generation, grocery managemen
 - Python 3.11 (or any CPython 3.10+ build compatible with Django 4.2)
 - PostgreSQL 13+ running locally with a user that can create databases
 - (Optional) AWS credentials with Bedrock access if you want real recipe generation
-- (Optional) A FairPrice API key for live grocery searches
 
 ## Local Environment Setup
 
@@ -101,7 +100,6 @@ All endpoints below are namespaced under `http://127.0.0.1:8000/api/v1/`. JWT au
 
 ### Groceries (`api.views.grocery_views`)
 
-- `GET grocery/search/?query=<term>` – proxy to the FairPrice API (or mock data) for ingredient search results.
 - `GET grocery/grocery-list/` – list all grocery lists owned by the caller.
 - `POST grocery/grocery-list/` – create a new named grocery list for the caller.
 - `GET grocery/grocery-list/<id>/` – retrieve a specific grocery list (includes nested items).
@@ -116,7 +114,6 @@ All endpoints below are namespaced under `http://127.0.0.1:8000/api/v1/`. JWT au
 ## External Integrations
 
 - **AWS Bedrock**: Implemented in `api/services/aws_bedrock.py`. Replace the `modelId` with the Bedrock model you have access to, and ensure AWS credentials/region are configured in your environment. Without valid credentials the AI endpoints will raise an exception.
-- **FairPrice API**: Implemented in `api/services/fairprice_api.py`. Provide a real `FAIRPRICE_API_KEY` to hit the live API; otherwise, the service returns mock data to keep local development flowing.
 
 ## Troubleshooting Tips
 
