@@ -6,30 +6,6 @@ from rest_framework.response import Response
 
 from ..models import GroceryItem, GroceryList
 from ..serializers import GroceryItemSerializer, GroceryListSerializer
-from ..services.fairprice_api import search_grocery_items as fairprice_search
-
-
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def search_grocery_items(request):
-    """Search for grocery items"""
-    query = request.GET.get("query")
-
-    if not query:
-        return Response(
-            {"error": "Query parameter is required"}, status=status.HTTP_400_BAD_REQUEST
-        )
-
-    try:
-        # Search using FairPrice API
-        items = fairprice_search(query)
-        return Response(items, status=status.HTTP_200_OK)
-
-    except Exception as e:
-        return Response(
-            {"error": f"Grocery search failed: {str(e)}"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
 
 
 @api_view(["GET", "POST"])
