@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from ..models import User, UserProfile
-
+import uuid
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     """Serializer for user registration"""
@@ -21,6 +21,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         validated_data.pop('password_confirm')
+        validated_data['username'] = uuid.uuid4()
         user = User.objects.create_user(**validated_data)
         # Create associated profile
         UserProfile.objects.create(user=user)
@@ -31,11 +32,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
     """Serializer for user profile"""
     
     email = serializers.EmailField(source='user.email', read_only=True)
+    first_name = serializers.CharField(source='user.first_name', read_only=True)
+    last_name = serializers.CharField(source='user.last_name', read_only=True)
+    gender = serializers.CharField(source='user.gender', read_only=True)
     
     class Meta:
         model = UserProfile
         fields = (
-            'email', 'weight_kg', 'height_cm', 'preferences', 
+            'email', 'first_name', 'last_name', 'gender', 'weight_kg', 'height_cm', 'preferences', 
             'allergies', 'goal', 'updated_at'
         )
         read_only_fields = ('updated_at',)
