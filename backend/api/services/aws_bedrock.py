@@ -62,21 +62,30 @@ def generate_recipe(prompt, user_profile=None):
         
         # Prepare the request body for Bedrock
         body = json.dumps({
-            "prompt": full_prompt,
-            "max_tokens": 2000,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": full_prompt
+                }
+            ],
+            "max_tokens": 2000,       # now correct field name for Messages API
             "temperature": 0.7,
+            "top_p": 0.9,
+            "anthropic_version": "bedrock-2023-05-31",
         })
         
         # Call Bedrock (replace 'model-id' with your actual model ID)
         response = client.invoke_model(
             modelId='anthropic.claude-3-sonnet-20240229-v1:0',  # Replace with your model
             body=body,
-            contentType='application/json'
+            contentType='application/json',
+                accept="application/json"
         )
         
         # Parse the response
         response_body = json.loads(response['body'].read())
-        recipe_data = json.loads(response_body['completion'])
+        model_output = response_body["content"][0]["text"]
+        recipe_data = json.loads(model_output)
         
         return recipe_data
         
@@ -133,9 +142,16 @@ def suggest_recipes_from_pantry(grocery_items):
         client = get_bedrock_client()
         
         body = json.dumps({
-            "prompt": full_prompt,
-            "max_tokens": 3000,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": full_prompt
+                }
+            ],
+            "max_tokens": 3000,       # now correct field name for Messages API
             "temperature": 0.7,
+            "top_p": 0.9,
+            "anthropic_version": "bedrock-2023-05-31",
         })
         
         response = client.invoke_model(
@@ -145,7 +161,8 @@ def suggest_recipes_from_pantry(grocery_items):
         )
         
         response_body = json.loads(response['body'].read())
-        recipes_data = json.loads(response_body['completion'])
+        model_output = response_body["content"][0]["text"]
+        recipes_data = json.loads(model_output)
         
         return recipes_data
         

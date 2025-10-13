@@ -11,6 +11,6 @@ urlpatterns = [
     path('generate/', generate_recipe, name='generate_recipe'),
     path('pantry-suggestions/', suggest_recipes_from_pantry, name='pantry_suggestions'),
     path('saved-recipes/', get_saved_recipes, name='get_saved_recipes'),
-    path('saved-recipes/', save_recipe, name='save_recipe'),
+    path('save-recipes/', save_recipe, name='save_recipe'),
     path('saved-recipes/<int:recipe_id>/', delete_saved_recipe, name='delete_saved_recipe'),
 ]

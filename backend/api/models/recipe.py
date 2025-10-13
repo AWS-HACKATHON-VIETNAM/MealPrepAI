@@ -13,10 +13,10 @@ class Recipe(models.Model):
     ]
     
     name = models.CharField(max_length=255)
-    time_taken_minutes = models.IntegerField()
-    difficulty = models.CharField(max_length=50, choices=DIFFICULTY_CHOICES)
-    calories = models.IntegerField()
-    macros = models.JSONField()  # {"protein": "22g", "carbs": "45g", "fat": "12g"}
+    time_taken_minutes = models.PositiveIntegerField(null=True, blank=True)
+    difficulty = models.CharField(max_length=50, choices=DIFFICULTY_CHOICES, null=True, blank=True)
+    calories = models.PositiveIntegerField(null=True, blank=True)
+    macros = models.JSONField(null=True, blank=True)  # {"protein": "22g", "carbs": "45g", "fat": "12g"}
     ingredients = models.JSONField()  # [{"item": "Chicken", "amount": "500g", "unit": "g"}]
     steps = models.JSONField()  # ["Step 1: ...", "Step 2: ..."]
     image_url = models.URLField(blank=True, null=True)
@@ -45,4 +45,6 @@ class UserSavedRecipe(models.Model):
         unique_together = ('user', 'recipe')
     
     def __str__(self):
-        return f"{self.user.email} saved {self.recipe.name}"
+        u = getattr(self.user, "email", str(self.user))
+        return f"{u} saved {self.recipe.name}"
+
