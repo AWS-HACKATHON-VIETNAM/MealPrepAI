@@ -9,10 +9,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     password = serializers.CharField(write_only=True, validators=[validate_password])
     password_confirm = serializers.CharField(write_only=True)
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
     
     class Meta:
         model = User
-        fields = ('email', 'password', 'password_confirm')
+        fields = ('email', 'password', 'password_confirm', 'first_name', 'last_name')
     
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
@@ -27,14 +29,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         UserProfile.objects.create(user=user)
         return user
 
-
 class UserProfileSerializer(serializers.ModelSerializer):
     """Serializer for user profile"""
     
     email = serializers.EmailField(source='user.email', read_only=True)
-    first_name = serializers.CharField(source='user.first_name', read_only=True)
-    last_name = serializers.CharField(source='user.last_name', read_only=True)
-    gender = serializers.CharField(source='user.gender', read_only=True)
+    first_name = serializers.CharField(source='user.first_name', read_only=False)
+    last_name = serializers.CharField(source='user.last_name', read_only=False)
     
     class Meta:
         model = UserProfile
