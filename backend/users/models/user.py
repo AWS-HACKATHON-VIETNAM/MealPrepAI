@@ -5,22 +5,18 @@ import uuid
 
 class User(AbstractUser):
     """Custom User model extending Django's AbstractUser"""
-    
+
     email = models.EmailField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     # Set username to a unique UUID
-    username = models.CharField(
-        max_length=150, 
-        unique=True, 
-        default=uuid.uuid4
-    )
+    username = models.CharField(max_length=150, unique=True, default=uuid.uuid4)
 
     # Add gender here
-    
-    USERNAME_FIELD = 'email'
+
+    USERNAME_FIELD = "email"
     # Add username to REQUIRED_FIELDS
-    REQUIRED_FIELDS = ['username']
-    
+    REQUIRED_FIELDS = ["username"]
+
     def __str__(self):
         return self.email
