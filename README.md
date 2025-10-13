@@ -11,6 +11,7 @@ MealPrepAI is a Django REST API that powers recipe generation, grocery managemen
 - **Profile data** (goals, preferences, allergies) is stored on `UserProfile` and is pulled into downstream requests so AI-generated recipes can respect dietary needs.
 - **Recipe endpoints** in `api.views.recipe_views` call out to AWS Bedrock through `api.services.aws_bedrock`. Responses are expected to be JSON payloads describing a single recipe or a small list of recipes, which are then stored in the local `Recipe` and `UserSavedRecipe` tables when persisted.
 - **Grocery endpoints** in `api.views.grocery_views` allow users to create named grocery lists and add/remove items.
+- **Pantry endpoints** in `api.views.pantry_views` maintain a simple catalogue of ingredients a user already owns (no quantities required) so recipe suggestions can take pantry stock into account.
 - **Database access** is handled entirely by Django’s ORM. PostgreSQL connection settings are loaded from the `.env` file and initialised when the project boots.
 
 ## Prerequisites
@@ -58,7 +59,6 @@ MealPrepAI is a Django REST API that powers recipe generation, grocery managemen
 
 5. **Apply migrations**
    ```bash
-   python manage.py makemigrations users api
    python manage.py migrate
    ```
 
@@ -106,10 +106,18 @@ All endpoints below are namespaced under `http://127.0.0.1:8000/api/v1/`. JWT au
 - `PUT grocery/grocery-list/<id>/` – update the name of a grocery list.
 - `DELETE grocery/grocery-list/<id>/` – delete a grocery list and its items.
 - `GET grocery/grocery-item/?grocery_list=<id>` – list grocery items (optionally filter by list).
-- `POST grocery/grocery-item/` – add a new item; body must include `grocery_list`, `ingredient`, `quantity`, `unit`, and optional `price`/`macros`.
+- `POST grocery/grocery-item/` – add a new item; body must include `grocery_list`, `ingredient`, `quantity`, and optional `price`/`macros`.
 - `GET grocery/grocery-item/<id>/` – retrieve a specific grocery item.
 - `PUT grocery/grocery-item/<id>/` – update a grocery item (including moving it between lists you own).
 - `DELETE grocery/grocery-item/<id>/` – remove a grocery item from the list.
+
+### Pantry (`api.views.pantry_views`)
+
+- `GET pantry/items/` – list pantry items that belong to the caller.
+- `POST pantry/items/` – add a new pantry item; body must include `name` and can optionally provide `notes`.
+- `GET pantry/items/<id>/` – retrieve a specific pantry item.
+- `PUT pantry/items/<id>/` – update a pantry item’s name or notes.
+- `DELETE pantry/items/<id>/` – remove a pantry item.
 
 ## External Integrations
 
@@ -120,7 +128,7 @@ All endpoints below are namespaced under `http://127.0.0.1:8000/api/v1/`. JWT au
 - If migrations fail with `psycopg2.OperationalError`, confirm PostgreSQL is running and that the credentials in `.env` match your local database user and password.
 - On macOS and Linux you might need developer headers for PostgreSQL (`postgresql-devel`, `libpq-dev` or similar) before installing `psycopg2-binary`.
 - If Bedrock calls return permission errors, verify your AWS user or role has the necessary Bedrock access policies.
-- Make sure to run `python manage.py makemigrations` the first time you pull new models; this repository does not ship pre-generated migration files.
+- Make sure to run `python manage.py migrate` after pulling structural changes so your database stays in sync with the models.
 
 ## Project Structure (Backend)
 
