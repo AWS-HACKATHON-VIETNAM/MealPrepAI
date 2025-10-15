@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { ShoppingCart, Plus, Check, AlertCircle, Loader2, Trash2 } from 'lucide-react';
+import { ShoppingCart, Plus, Check, AlertCircle, Loader2, Trash2, Edit2, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
+import { Input } from './ui/input';
 import { groceryService } from '../services/grocery.service';
 import type { GroceryList, GroceryItem } from '../types/api.types';
 import { Alert } from './ui/alert';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 
 export function GroceryListScreen() {
   const [groceryLists, setGroceryLists] = useState<GroceryList[]>([]);
@@ -13,6 +15,28 @@ export function GroceryListScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [isCreatingList, setIsCreatingList] = useState(false);
+  
+  // Add Item Dialog
+  const [showAddItemDialog, setShowAddItemDialog] = useState(false);
+  const [newItemIngredient, setNewItemIngredient] = useState('');
+  const [newItemQuantity, setNewItemQuantity] = useState('');
+  const [isAddingItem, setIsAddingItem] = useState(false);
+  
+  // Edit Item Dialog
+  const [showEditItemDialog, setShowEditItemDialog] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<number | null>(null);
+  const [editItemIngredient, setEditItemIngredient] = useState('');
+  const [editItemQuantity, setEditItemQuantity] = useState('');
+  const [isEditingItem, setIsEditingItem] = useState(false);
+  
+  // Edit List Name Dialog
+  const [showEditListDialog, setShowEditListDialog] = useState(false);
+  const [editListName, setEditListName] = useState('');
+  const [isEditingList, setIsEditingList] = useState(false);
+
+  useEffect(() => {
+    console.log('showAddItemDialog changed to:', showAddItemDialog);
+  }, [showAddItemDialog]);
 
   useEffect(() => {
     loadGroceryLists();
@@ -85,6 +109,107 @@ export function GroceryListScreen() {
     }
   };
 
+  const handleAddItem = async () => {
+    if (!activeListId || !newItemIngredient.trim() || !newItemQuantity.trim()) return;
+
+    try {
+      setIsAddingItem(true);
+      setError('');
+      const newItem = await groceryService.addGroceryItem({
+        grocery_list: activeListId,
+        ingredient: newItemIngredient,
+        quantity: newItemQuantity,
+      });
+      setItems([...items, newItem]);
+      setNewItemIngredient('');
+      setNewItemQuantity('');
+      setShowAddItemDialog(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add item');
+    } finally {
+      setIsAddingItem(false);
+    }
+  };
+
+  const handleEditListName = async () => {
+    if (!activeListId || !editListName.trim()) return;
+
+    try {
+      setIsEditingList(true);
+      setError('');
+      const updatedList = await groceryService.updateGroceryList(activeListId, editListName);
+      setGroceryLists(groceryLists.map(l => l.id === activeListId ? updatedList : l));
+      setShowEditListDialog(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update list name');
+    } finally {
+      setIsEditingList(false);
+    }
+  };
+
+  const handleDeleteList = async () => {
+    if (!activeListId) return;
+
+    const confirmDelete = window.confirm('Are you sure you want to delete this grocery list?');
+    if (!confirmDelete) return;
+
+    try {
+      setError('');
+      await groceryService.deleteGroceryList(activeListId);
+      const updatedLists = groceryLists.filter(l => l.id !== activeListId);
+      setGroceryLists(updatedLists);
+      setActiveListId(updatedLists.length > 0 ? updatedLists[0].id : null);
+      setItems([]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete list');
+    }
+  };
+
+  const openEditListDialog = () => {
+    const activeList = groceryLists.find(l => l.id === activeListId);
+    if (activeList) {
+      setEditListName(activeList.name);
+      setShowEditListDialog(true);
+    }
+  };
+
+  const openEditItemDialog = async (itemId: number) => {
+    try {
+      setError('');
+      const item = await groceryService.getGroceryItems(activeListId || undefined);
+      const selectedItem = item.find(i => i.id === itemId);
+      
+      if (selectedItem) {
+        setEditingItemId(itemId);
+        setEditItemIngredient(selectedItem.ingredient);
+        setEditItemQuantity(selectedItem.quantity);
+        setShowEditItemDialog(true);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load item');
+    }
+  };
+
+  const handleEditItem = async () => {
+    if (!editingItemId || !editItemIngredient.trim() || !editItemQuantity.trim()) return;
+
+    try {
+      setIsEditingItem(true);
+      setError('');
+      const updatedItem = await groceryService.updateGroceryItem(editingItemId, {
+        ingredient: editItemIngredient,
+        quantity: editItemQuantity,
+      });
+      setItems(items.map(i => i.id === editingItemId ? updatedItem : i));
+      setShowEditItemDialog(false);
+      setEditingItemId(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update item');
+    } finally {
+      setIsEditingItem(false);
+    }
+  };
+
   const checkedCount = items.filter(item => (item as any).checked).length;
 
   if (isLoading) {
@@ -125,7 +250,8 @@ export function GroceryListScreen() {
   const activeList = groceryLists.find(l => l.id === activeListId);
 
   return (
-    <div className="h-full flex flex-col pt-12 pb-20 bg-white">
+    <>
+      <div className="h-full flex flex-col pt-12 pb-20 bg-white">
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-100">
         <div className="flex items-center gap-3 mb-3">
@@ -139,6 +265,22 @@ export function GroceryListScreen() {
             </p>
           </div>
           <Button
+            onClick={openEditListDialog}
+            size="sm"
+            variant="ghost"
+            className="text-gray-500"
+          >
+            <Edit2 className="w-4 h-4" />
+          </Button>
+          <Button
+            onClick={handleDeleteList}
+            size="sm"
+            variant="ghost"
+            className="text-red-500"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+          <Button
             onClick={handleCreateList}
             disabled={isCreatingList}
             size="sm"
@@ -147,6 +289,25 @@ export function GroceryListScreen() {
             <Plus className="w-4 h-4" />
           </Button>
         </div>
+
+        {/* List Tabs */}
+        {groceryLists.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {groceryLists.map(list => (
+              <button
+                key={list.id}
+                onClick={() => setActiveListId(list.id)}
+                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
+                  list.id === activeListId
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {list.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {error && (
@@ -178,6 +339,12 @@ export function GroceryListScreen() {
                   <p className="text-gray-500 text-sm">{item.quantity}</p>
                 </div>
                 <button
+                  onClick={() => openEditItemDialog(item.id)}
+                  className="p-1 text-gray-400 hover:text-blue-500"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <button
                   onClick={() => handleDeleteItem(item.id)}
                   className="p-1 text-gray-400 hover:text-red-500"
                 >
@@ -188,6 +355,178 @@ export function GroceryListScreen() {
           </div>
         )}
       </div>
+
+      {/* Add Item Button */}
+      <div className="px-6 py-4 border-t border-gray-100">
+        <Button
+          onClick={() => {
+            console.log('Add Item button clicked');
+            setShowAddItemDialog(true);
+          }}
+          className="w-full bg-orange-500 hover:bg-orange-600"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Item
+        </Button>
+      </div>
     </div>
+
+      {/* Add Item Dialog */}
+      {showAddItemDialog && (
+        <Dialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Grocery Item</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Ingredient</label>
+                <Input
+                  autoFocus
+                  value={newItemIngredient}
+                  onChange={(e) => setNewItemIngredient(e.target.value)}
+                  placeholder="e.g., Tomatoes"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddItem();
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Quantity</label>
+                <Input
+                  value={newItemQuantity}
+                  onChange={(e) => setNewItemQuantity(e.target.value)}
+                  placeholder="e.g., 2 lbs"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddItem();
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowAddItemDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddItem}
+                disabled={isAddingItem || !newItemIngredient.trim() || !newItemQuantity.trim()}
+                className="bg-orange-500 hover:bg-orange-600"
+              >
+                {isAddingItem ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Add Item
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Edit List Name Dialog */}
+      {showEditListDialog && (
+        <Dialog open={showEditListDialog} onOpenChange={setShowEditListDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit List Name</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <Input
+                autoFocus
+                value={editListName}
+                onChange={(e) => setEditListName(e.target.value)}
+                placeholder="List name"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleEditListName();
+                  }
+                }}
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowEditListDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleEditListName}
+                disabled={isEditingList || !editListName.trim()}
+                className="bg-orange-500 hover:bg-orange-600"
+              >
+                {isEditingList ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Save
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Edit Item Dialog */}
+      {showEditItemDialog && (
+        <Dialog open={showEditItemDialog} onOpenChange={setShowEditItemDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Grocery Item</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Ingredient</label>
+                <Input
+                  autoFocus
+                  value={editItemIngredient}
+                  onChange={(e) => setEditItemIngredient(e.target.value)}
+                  placeholder="e.g., Tomatoes"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleEditItem();
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Quantity</label>
+                <Input
+                  value={editItemQuantity}
+                  onChange={(e) => setEditItemQuantity(e.target.value)}
+                  placeholder="e.g., 2 lbs"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleEditItem();
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowEditItemDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleEditItem}
+                disabled={isEditingItem || !editItemIngredient.trim() || !editItemQuantity.trim()}
+                className="bg-orange-500 hover:bg-orange-600"
+              >
+                {isEditingItem ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }

@@ -2,17 +2,54 @@ import { useState } from 'react';
 import { ChefHat, Send, Sparkles } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { recipeService } from '../services/recipe.service';
 
 interface Message {
   id: string;
   type: 'user' | 'assistant';
   content: string;
   suggestions?: string[];
+  recipe?: any;
 }
 
 interface HomeScreenProps {
   onRecipeSelect: () => void;
 }
+
+// Format recipe data into readable text
+const formatRecipe = (recipe: any): string => {
+  const lines: string[] = [];
+  
+  if (recipe.name) {
+    lines.push(`🍽️ ${recipe.name}\n`);
+  }
+  
+  if (recipe.time_taken_minutes || recipe.calories) {
+    lines.push(`⏱️ Time: ${recipe.time_taken_minutes || '?'} min | 🔥 Calories: ${recipe.calories || '?'}\n`);
+  }
+  
+  if (recipe.macros) {
+    lines.push(`📊 Protein: ${recipe.macros.protein || '?'}g | Carbs: ${recipe.macros.carbs || '?'}g | Fat: ${recipe.macros.fat || '?'}g\n`);
+  }
+  
+  if (recipe.ingredients && recipe.ingredients.length > 0) {
+    lines.push('\n📋 Ingredients:');
+    recipe.ingredients.forEach((ing: any) => {
+      const amount = ing.amount ? `${ing.amount} ${ing.unit || ''}` : '';
+      lines.push(`  • ${amount} ${ing.item || ing.name || ''}`);
+    });
+    lines.push('');
+  }
+  
+  if (recipe.steps && recipe.steps.length > 0) {
+    lines.push('\n👨‍🍳 Steps:');
+    recipe.steps.forEach((step: string, idx: number) => {
+      lines.push(`  ${idx + 1}. ${step}`);
+    });
+  }
+  
+  return lines.join('\n');
+};
 
 export function HomeScreen({ onRecipeSelect }: HomeScreenProps) {
   const [messages, setMessages] = useState<Message[]>([
@@ -24,29 +61,60 @@ export function HomeScreen({ onRecipeSelect }: HomeScreenProps) {
     },
   ]);
   const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSendMessage = (message: string) => {
-    if (!message.trim()) return;
+  const handleSendMessage = async (message: string) => {
+    if (!message.trim() || isLoading) return;
 
-    setMessages([
-      ...messages,
+    const userMessageId = Date.now().toString();
+    const assistantMessageId = (Date.now() + 1).toString();
+
+    // Add user message and loading message
+    setMessages(prev => [
+      ...prev,
       {
-        id: Date.now().toString(),
+        id: userMessageId,
         type: 'user',
         content: message,
       },
       {
-        id: (Date.now() + 1).toString(),
+        id: assistantMessageId,
         type: 'assistant',
-        content: "Great choice! Here are some recipes based on your preferences:",
+        content: "Generating your recipe... 🍳",
       },
     ]);
     setInputValue('');
-    
-    // Simulate showing recipes after response
-    setTimeout(() => {
-      onRecipeSelect();
-    }, 1000);
+    setIsLoading(true);
+
+    try {
+      const recipe = await recipeService.generateRecipe({ prompt: message });
+      const formattedRecipe = formatRecipe(recipe);
+
+      // Update assistant message with the recipe
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === assistantMessageId
+            ? { ...msg, content: formattedRecipe, recipe }
+            : msg
+        )
+      );
+    } catch (error) {
+      console.error('Error generating recipe:', error);
+      
+      // Update with error message
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === assistantMessageId
+            ? {
+                ...msg,
+                content: "Sorry, I couldn't generate a recipe right now. Please try again! 😔",
+              }
+            : msg
+        )
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -75,7 +143,7 @@ export function HomeScreen({ onRecipeSelect }: HomeScreenProps) {
                 </div>
                 <div className="flex-1">
                   <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
-                    <p className="text-gray-800">{message.content}</p>
+                    <p className="text-gray-800 whitespace-pre-wrap">{message.content}</p>
                   </div>
                   {message.suggestions && (
                     <div className="flex flex-wrap gap-2 mt-3">

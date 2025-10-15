@@ -14,10 +14,13 @@ The original design is available at https://www.figma.com/design/TC2TjhdEgcwXCWx
   - View detailed recipe information (ingredients, steps, macros, difficulty)
   - Delete saved recipes
 - 🛒 **Grocery Lists**: 
-  - Create multiple grocery lists
-  - Add, update, and delete grocery items
-  - Track purchase status
-  - Organize items by list
+  - Create and manage multiple grocery lists
+  - Add, edit, and delete grocery items
+  - Track ingredient and quantity for each item
+  - Switch between different lists with tabs
+  - Edit list names
+  - Delete entire lists with confirmation
+  - Track purchase status with checkboxes
 - 🥫 **Pantry Management**: Track ingredients you already have at home
 - 👤 **User Profile**: 
   - View and update dietary preferences
@@ -188,11 +191,13 @@ All endpoints use the base URL from `.env`: `VITE_API_BASE_URL`
   - Returns: 204 No Content
 - `GET /grocery/grocery-item/` - List items (optional `?grocery_list=<id>`)
   - Returns: `GroceryItem[]`
+- `GET /grocery/grocery-item/<id>/` - Get single item (for editing)
+  - Returns: `GroceryItem`
 - `POST /grocery/grocery-item/` - Add item to list
   - Body: `GroceryItemCreateRequest`
   - Returns: `GroceryItem`
 - `PUT /grocery/grocery-item/<id>/` - Update item
-  - Body: Partial `GroceryItem` fields
+  - Body: Partial `GroceryItem` fields (ingredient, quantity, price, macros)
   - Returns: `GroceryItem`
 - `DELETE /grocery/grocery-item/<id>/` - Delete item
   - Returns: 204 No Content
@@ -236,8 +241,9 @@ groceryService.getGroceryList(id)          // Get list with items
 groceryService.createGroceryList(name)     // Create new list
 groceryService.updateGroceryList(id, name) // Update list name
 groceryService.deleteGroceryList(id)       // Delete list
+groceryService.getGroceryItems(listId?)    // Get all items (optionally filtered by list)
 groceryService.addGroceryItem(item)        // Add item to list
-groceryService.updateGroceryItem(id, data) // Update item
+groceryService.updateGroceryItem(id, data) // Update item (ingredient, quantity, etc.)
 groceryService.deleteGroceryItem(id)       // Delete item
 groceryService.searchGroceryItem(query)    // Search external API
 ```
