@@ -32,3 +32,11 @@ media
 .vscode/
 .idea/
 *.swp
+
+# Migrations
+*/migrations/
+**/migrations/
+*/migrations/*.pyc
+**/migrations/*.pyc
+*/migrations/__pycache__/
+**/migrations/__pycache__/
