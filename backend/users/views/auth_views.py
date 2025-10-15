@@ -13,17 +13,31 @@ from ..models import UserProfile
 def register(request):
     """Register a new user"""
     serializer = UserRegistrationSerializer(data=request.data)
+    print("="*60)
+    print("REGISTRATION DATA RECEIVED:", request.data)
+    print("="*60)
+    
     if serializer.is_valid():
-        user = serializer.save()
-        refresh = RefreshToken.for_user(user)
-        return Response(
-            {
-                "message": "User registered successfully",
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
-            },
-            status=status.HTTP_201_CREATED,
-        )
+        try:
+            user = serializer.save()
+            refresh = RefreshToken.for_user(user)
+            return Response(
+                {
+                    "message": "User registered successfully",
+                    "access": str(refresh.access_token),
+                    "refresh": str(refresh),
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to create user: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    print("="*60)
+    print("VALIDATION ERRORS:", serializer.errors)
+    print("="*60)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

@@ -23,7 +23,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         validated_data.pop('password_confirm')
-        validated_data['username'] = uuid.uuid4()
+        validated_data['username'] = str(uuid.uuid4())  # Convert UUID to string
         user = User.objects.create_user(**validated_data)
         # Create associated profile
         UserProfile.objects.create(user=user)
