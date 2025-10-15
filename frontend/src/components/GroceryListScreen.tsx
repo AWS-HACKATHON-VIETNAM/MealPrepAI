@@ -373,12 +373,16 @@ export function GroceryListScreen() {
 
       {/* Add Item Dialog */}
       {showAddItemDialog && (
-        <Dialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Grocery Item</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg shadow-2xl border-2 border-gray-300 w-[calc(100%-2rem)] max-w-md p-6 relative">
+            <button
+              onClick={() => setShowAddItemDialog(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-lg font-semibold mb-4">Add Grocery Item</h2>
+            <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Ingredient</label>
                 <Input
@@ -409,7 +413,7 @@ export function GroceryListScreen() {
                 />
               </div>
             </div>
-            <DialogFooter>
+            <div className="flex gap-2 mt-6 justify-end">
               <Button
                 variant="outline"
                 onClick={() => setShowAddItemDialog(false)}
@@ -424,9 +428,9 @@ export function GroceryListScreen() {
                 {isAddingItem ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Add Item
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Edit List Name Dialog */}
