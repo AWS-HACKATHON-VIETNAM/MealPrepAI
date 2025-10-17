@@ -1,9 +1,13 @@
-import { User, Target, Scale, Activity, Heart, ChevronRight, LogOut } from 'lucide-react';
+import { User, Target, Scale, Activity, Heart, ChevronRight, LogOut, Package } from 'lucide-react';
 import { Button } from './ui/button';
 import { useAuth } from '../contexts/AuthContext';
 import { useState } from 'react';
 
-export function ProfileScreen() {
+interface ProfileScreenProps {
+  onNavigateToPantry?: () => void;
+}
+
+export function ProfileScreen({ onNavigateToPantry }: ProfileScreenProps = {}) {
   const { profile, logout } = useAuth();
   const [isLoading] = useState(false);
 
@@ -145,6 +149,18 @@ export function ProfileScreen() {
 
       {/* Settings Menu */}
       <div className="px-6 py-4 space-y-2">
+        {onNavigateToPantry && (
+          <button 
+            onClick={onNavigateToPantry}
+            className="w-full flex items-center justify-between p-4 bg-orange-50 rounded-xl hover:bg-orange-100 border border-orange-200"
+          >
+            <div className="flex items-center gap-3">
+              <Package className="w-5 h-5 text-orange-500" />
+              <span className="text-orange-700 font-medium">My Pantry</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-orange-400" />
+          </button>
+        )}
         <button className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100">
           <span className="text-gray-700">Meal History</span>
           <ChevronRight className="w-5 h-5 text-gray-400" />

@@ -3,7 +3,9 @@ import { ShoppingCart, Plus, Check, AlertCircle, Loader2, Trash2, Edit2, X } fro
 import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
 import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
 import { groceryService } from '../services/grocery.service';
+import { pantryService } from '../services/pantry.service';
 import type { GroceryList, GroceryItem } from '../types/api.types';
 import { Alert } from './ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
@@ -33,6 +35,13 @@ export function GroceryListScreen() {
   const [showEditListDialog, setShowEditListDialog] = useState(false);
   const [editListName, setEditListName] = useState('');
   const [isEditingList, setIsEditingList] = useState(false);
+
+  // Add to Pantry Dialog
+  const [showAddToPantryDialog, setShowAddToPantryDialog] = useState(false);
+  const [pantryItemName, setPantryItemName] = useState('');
+  const [pantryItemNotes, setPantryItemNotes] = useState('');
+  const [isAddingToPantry, setIsAddingToPantry] = useState(false);
+  const [selectedGroceryItemId, setSelectedGroceryItemId] = useState<number | null>(null);
 
   useEffect(() => {
     console.log('showAddItemDialog changed to:', showAddItemDialog);
@@ -77,8 +86,11 @@ export function GroceryListScreen() {
     try {
       setIsCreatingList(true);
       setError('');
+      const now = new Date();
+      const dateStr = now.toLocaleDateString();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const newList = await groceryService.createGroceryList(
-        `Grocery List ${new Date().toLocaleDateString()}`
+        `Grocery List ${dateStr} ${timeStr}`
       );
       setGroceryLists([...groceryLists, newList]);
       setActiveListId(newList.id);
@@ -92,10 +104,51 @@ export function GroceryListScreen() {
   const toggleItem = async (itemId: number) => {
     if (!activeListId) return;
     
-    // Note: Backend doesn't have is_purchased field yet, so we'll just update locally for now
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+
+    const wasChecked = (item as any).checked;
+    
+    // Update UI immediately
     setItems(items.map(i => 
-      i.id === itemId ? { ...i, checked: !(i as any).checked } : i
+      i.id === itemId ? { ...i, checked: !wasChecked } : i
     ));
+
+    // If checking the item (marking as purchased), ask to add to pantry
+    if (!wasChecked) {
+      setSelectedGroceryItemId(itemId);
+      setPantryItemName(item.ingredient);
+      setPantryItemNotes(item.quantity);
+      setShowAddToPantryDialog(true);
+    }
+  };
+
+  const handleAddToPantry = async () => {
+    if (!pantryItemName.trim()) return;
+
+    try {
+      setIsAddingToPantry(true);
+      setError('');
+      await pantryService.addPantryItem({
+        name: pantryItemName,
+        notes: pantryItemNotes || undefined,
+      });
+      setShowAddToPantryDialog(false);
+      setPantryItemName('');
+      setPantryItemNotes('');
+      setSelectedGroceryItemId(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add to pantry');
+    } finally {
+      setIsAddingToPantry(false);
+    }
+  };
+
+  const handleSkipPantry = () => {
+    setShowAddToPantryDialog(false);
+    setPantryItemName('');
+    setPantryItemNotes('');
+    setSelectedGroceryItemId(null);
   };
 
   const handleDeleteItem = async (itemId: number) => {
@@ -259,55 +312,12 @@ export function GroceryListScreen() {
             <ShoppingCart className="w-6 h-6 text-orange-500" />
           </div>
           <div className="flex-1">
-            <h2 className="text-gray-900">{activeList?.name || 'Grocery List'}</h2>
+            <h2 className="text-gray-900">My Grocery List</h2>
             <p className="text-gray-500 text-sm">
               {checkedCount} of {items.length} items checked
             </p>
           </div>
-          <Button
-            onClick={openEditListDialog}
-            size="sm"
-            variant="ghost"
-            className="text-gray-500"
-          >
-            <Edit2 className="w-4 h-4" />
-          </Button>
-          <Button
-            onClick={handleDeleteList}
-            size="sm"
-            variant="ghost"
-            className="text-red-500"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-          <Button
-            onClick={handleCreateList}
-            disabled={isCreatingList}
-            size="sm"
-            variant="outline"
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
         </div>
-
-        {/* List Tabs */}
-        {groceryLists.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {groceryLists.map(list => (
-              <button
-                key={list.id}
-                onClick={() => setActiveListId(list.id)}
-                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
-                  list.id === activeListId
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {list.name}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {error && (
@@ -530,6 +540,66 @@ export function GroceryListScreen() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Add to Pantry Dialog */}
+      {showAddToPantryDialog && (
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg shadow-2xl border-2 border-gray-300 w-[calc(100%-2rem)] max-w-md p-6 relative">
+            <button
+              onClick={handleSkipPantry}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-lg font-semibold mb-2">Add to Pantry?</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Would you like to add this item to your pantry inventory?
+            </p>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Item Name</label>
+                <Input
+                  autoFocus
+                  value={pantryItemName}
+                  onChange={(e) => setPantryItemName(e.target.value)}
+                  placeholder="e.g., Tomatoes"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddToPantry();
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Notes (Optional)</label>
+                <Textarea
+                  value={pantryItemNotes}
+                  onChange={(e) => setPantryItemNotes(e.target.value)}
+                  placeholder="e.g., Fresh, organic, expires in 1 week"
+                  rows={3}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-6 justify-end">
+              <Button
+                variant="outline"
+                onClick={handleSkipPantry}
+              >
+                Skip
+              </Button>
+              <Button
+                onClick={handleAddToPantry}
+                disabled={isAddingToPantry || !pantryItemName.trim()}
+                className="bg-orange-500 hover:bg-orange-600"
+              >
+                {isAddingToPantry ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Add to Pantry
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

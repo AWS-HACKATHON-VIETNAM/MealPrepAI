@@ -7,12 +7,13 @@ import { RecipeListScreen } from './components/RecipeListScreen';
 import { RecipeDetailScreen } from './components/RecipeDetailScreen';
 import { CookingModeScreen } from './components/CookingModeScreen';
 import { GroceryListScreen } from './components/GroceryListScreen';
+import { PantryScreen } from './components/PantryScreen';
 import { SavedRecipesScreen } from './components/SavedRecipesScreen';
 import { ProfileScreen } from './components/ProfileScreen';
 import { useAuth } from './contexts/AuthContext';
 import type { Recipe } from './types/api.types';
 
-type Screen = 'login' | 'home' | 'recipes' | 'recipeDetail' | 'cooking' | 'grocery' | 'saved' | 'profile';
+type Screen = 'login' | 'home' | 'recipes' | 'recipeDetail' | 'cooking' | 'grocery' | 'pantry' | 'saved' | 'profile';
 
 export default function App() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -60,6 +61,9 @@ export default function App() {
         break;
       case 'grocery':
         setCurrentScreen('grocery');
+        break;
+      case 'pantry':
+        setCurrentScreen('pantry');
         break;
       case 'saved':
         setCurrentScreen('saved');
@@ -137,6 +141,13 @@ export default function App() {
         </>
       )}
       
+      {currentScreen === 'pantry' && (
+        <>
+          <PantryScreen />
+          <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+        </>
+      )}
+      
       {currentScreen === 'saved' && (
         <>
           <SavedRecipesScreen onRecipeClick={handleRecipeClick} />
@@ -146,7 +157,10 @@ export default function App() {
       
       {currentScreen === 'profile' && (
         <>
-          <ProfileScreen />
+          <ProfileScreen onNavigateToPantry={() => {
+            setCurrentScreen('pantry');
+            setActiveTab('pantry');
+          }} />
           <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
         </>
       )}

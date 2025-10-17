@@ -14,14 +14,17 @@ The original design is available at https://www.figma.com/design/TC2TjhdEgcwXCWx
   - View detailed recipe information (ingredients, steps, macros, difficulty)
   - Delete saved recipes
 - 🛒 **Grocery Lists**: 
-  - Create and manage multiple grocery lists
+  - Single unified grocery list (no multiple lists)
   - Add, edit, and delete grocery items
   - Track ingredient and quantity for each item
-  - Switch between different lists with tabs
-  - Edit list names
-  - Delete entire lists with confirmation
   - Track purchase status with checkboxes
-- 🥫 **Pantry Management**: Track ingredients you already have at home
+  - Automatic "Add to Pantry" prompt when checking items
+- 🥫 **Pantry Management**: 
+  - Full CRUD operations for pantry items
+  - Track item names and optional notes
+  - View all pantry items in organized cards
+  - Automatically add items from grocery list when checking them off
+  - Accessible via bottom navigation and Profile screen
 - 👤 **User Profile**: 
   - View and update dietary preferences
   - Manage allergies
@@ -87,7 +90,8 @@ src/
 │   ├── RecipeListScreen.tsx # ✅ Integrated - Display saved recipes
 │   ├── RecipeDetailScreen.tsx # ✅ Integrated - Recipe details with save
 │   ├── SavedRecipesScreen.tsx # ✅ Integrated - Manage saved recipes
-│   ├── GroceryListScreen.tsx # ✅ Integrated - Grocery list management
+│   ├── GroceryListScreen.tsx # ✅ Integrated - Single grocery list with add-to-pantry
+│   ├── PantryScreen.tsx    # ✅ Integrated - Pantry inventory management
 │   ├── ProfileScreen.tsx   # ✅ Integrated - User profile display
 │   └── CookingModeScreen.tsx # Step-by-step cooking mode
 ├── contexts/               # React context providers
@@ -205,16 +209,58 @@ All endpoints use the base URL from `.env`: `VITE_API_BASE_URL`
   - Returns: Search results
 
 #### Pantry (`/pantry/`)
-- `GET /pantry/items/` - List pantry items
+- `GET /pantry/items/` - List all pantry items for current user
   - Returns: `PantryItem[]`
 - `POST /pantry/items/` - Add pantry item
   - Body: `{ name: string, notes?: string }`
   - Returns: `PantryItem`
+- `GET /pantry/items/<id>/` - Get single pantry item
+  - Returns: `PantryItem`
 - `PUT /pantry/items/<id>/` - Update pantry item
-  - Body: Partial `PantryItem` fields
+  - Body: Partial `PantryItem` fields (name, notes)
   - Returns: `PantryItem`
 - `DELETE /pantry/items/<id>/` - Delete pantry item
   - Returns: 204 No Content
+
+### Pantry Integration Features
+
+The Pantry functionality is fully integrated with:
+
+**✅ Complete CRUD Operations:**
+- View all pantry items in organized cards
+- Add new items with name (required) and notes (optional)
+- Edit existing items with pre-filled forms
+- Delete items with confirmation
+- Real-time updates and error handling
+
+**✅ Grocery-to-Pantry Workflow:**
+- When checking off grocery items (marking as purchased), a modal automatically appears
+- Pre-fills item name (from ingredient) and notes (from quantity)
+- Users can edit details or skip adding to pantry
+- Streamlines the workflow from shopping to stocking pantry
+
+**✅ Navigation Access:**
+- Accessible via bottom navigation bar (Pantry tab with Package icon)
+- Also accessible from Profile screen via "My Pantry" button
+- Consistent mobile-first design matching other screens
+
+**✅ UI/UX Design:**
+- Custom modals with absolute positioning (no Radix Dialog positioning issues)
+- Empty state guidance when no items exist
+- Loading states with spinners
+- Error handling with user-friendly messages
+- Same design language as Grocery and Recipe screens (orange-500 theme)
+
+**Type Definition:**
+```typescript
+interface PantryItem {
+  id: number;
+  name: string;
+  notes?: string;
+  created_at: string;
+  updated_at?: string;
+}
+```
 
 ### Service Modules Architecture
 
@@ -250,9 +296,10 @@ groceryService.searchGroceryItem(query)    // Search external API
 
 #### `pantry.service.ts` - Pantry Operations
 ```typescript
-pantryService.getPantryItems()             // List pantry items
+pantryService.getPantryItems()             // List all pantry items
+pantryService.getPantryItem(id)            // Get single item (available, not actively used in UI)
 pantryService.addPantryItem(item)          // Add pantry item
-pantryService.updatePantryItem(id, data)   // Update item
+pantryService.updatePantryItem(id, data)   // Update item (name, notes)
 pantryService.deletePantryItem(id)         // Delete item
 ```
 
@@ -282,7 +329,12 @@ interface GroceryItem {
 }
 
 // Pantry
-interface PantryItem { id, user_id, name, notes?, created_at }
+interface PantryItem { 
+  id, name, notes?, created_at, updated_at? 
+}
+interface PantryItemCreateRequest { 
+  name, notes? 
+}
 ```
 
 ## 💻 Development
@@ -491,7 +543,8 @@ The Vite build automatically:
 | RecipeListScreen | ✅ Complete | `/recipes/saved-recipes/` (GET) |
 | RecipeDetailScreen | ✅ Complete | `/recipes/save-recipes/` (POST) |
 | SavedRecipesScreen | ✅ Complete | `/recipes/saved-recipes/` (GET, DELETE) |
-| GroceryListScreen | ✅ Complete | `/grocery/*` (all CRUD operations) |
+| GroceryListScreen | ✅ Complete | `/grocery/*` (all CRUD + add-to-pantry) |
+| PantryScreen | ✅ Complete | `/pantry/items/` (all CRUD operations) |
 | AuthContext | ✅ Complete | JWT token management & auto-refresh |
 | API Client | ✅ Complete | Custom Fetch wrapper with interceptors |
 | Type Definitions | ✅ Complete | Full TypeScript coverage |
@@ -499,7 +552,6 @@ The Vite build automatically:
 ### 🚧 Pending Features
 
 - [ ] HomeScreen AI chat integration with `/recipes/generate/`
-- [ ] Pantry screen UI implementation
 - [ ] Recipe search and filtering
 - [ ] Profile edit forms
 - [ ] Image upload for recipes
@@ -529,9 +581,19 @@ The Vite build automatically:
 **Grocery Lists:**
 - [ ] Create new grocery list
 - [ ] View list items
-- [ ] Toggle item checked state
+- [ ] Add items to list
+- [ ] Edit items (ingredient, quantity)
 - [ ] Delete items
-- [ ] Delete list
+- [ ] Toggle item checked state (mark as purchased)
+- [ ] "Add to Pantry" modal when checking items
+- [ ] Empty state handling
+
+**Pantry:**
+- [ ] View all pantry items
+- [ ] Add new pantry item
+- [ ] Edit pantry item (name, notes)
+- [ ] Delete pantry item
+- [ ] Add from grocery list when checking items
 - [ ] Empty state handling
 
 **Profile:**
