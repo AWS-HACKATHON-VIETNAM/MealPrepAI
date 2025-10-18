@@ -22,11 +22,10 @@ export const recipeService = {
 
   // Get all saved recipes for the current user
   // Backend returns UserSavedRecipe[] with nested recipe objects
-  async getSavedRecipes(): Promise<Recipe[]> {
-    const data = await apiClient.get<Array<{ id: number; recipe: Recipe; saved_at: string }>>(
+  async getSavedRecipes(): Promise<Array<{ id: number; recipe: Recipe; saved_at: string }>> {
+    return await apiClient.get<Array<{ id: number; recipe: Recipe; saved_at: string }>>(
       API_ENDPOINTS.RECIPES.SAVED
     );
-    return data.map(item => item.recipe);
   },
 
   // Save a recipe to user's collection

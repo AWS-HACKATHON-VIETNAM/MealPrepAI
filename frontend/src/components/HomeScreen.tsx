@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChefHat, Send, Sparkles } from 'lucide-react';
+import { ChefHat, Send, Sparkles, CookingPot, Heart, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { recipeService } from '../services/recipe.service';
@@ -10,10 +10,12 @@ interface Message {
   content: string;
   suggestions?: string[];
   recipe?: any;
+  isSaved?: boolean;
 }
 
 interface HomeScreenProps {
   onRecipeSelect: () => void;
+  onStartCooking: (recipe: any) => void;
 }
 
 // Format recipe data into readable text
@@ -51,7 +53,7 @@ const formatRecipe = (recipe: any): string => {
   return lines.join('\n');
 };
 
-export function HomeScreen({ onRecipeSelect }: HomeScreenProps) {
+export function HomeScreen({ onRecipeSelect, onStartCooking }: HomeScreenProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -62,6 +64,24 @@ export function HomeScreen({ onRecipeSelect }: HomeScreenProps) {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [savingRecipeId, setSavingRecipeId] = useState<string | null>(null);
+
+  const handleSaveRecipe = async (messageId: string, recipe: any) => {
+    try {
+      setSavingRecipeId(messageId);
+      await recipeService.saveRecipe(recipe);
+      
+      // Mark the message as saved
+      setMessages(messages.map(msg => 
+        msg.id === messageId ? { ...msg, isSaved: true } : msg
+      ));
+    } catch (error) {
+      console.error('Error saving recipe:', error);
+      alert('Failed to save recipe. Please try again.');
+    } finally {
+      setSavingRecipeId(null);
+    }
+  };
 
   const handleSendMessage = async (message: string) => {
     if (!message.trim() || isLoading) return;
@@ -145,6 +165,43 @@ export function HomeScreen({ onRecipeSelect }: HomeScreenProps) {
                   <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
                     <p className="text-gray-800 whitespace-pre-wrap">{message.content}</p>
                   </div>
+                  {message.recipe && message.recipe.steps && message.recipe.steps.length > 0 && (
+                    <div className="mt-3 flex gap-2">
+                      <Button
+                        onClick={() => handleSaveRecipe(message.id, message.recipe)}
+                        disabled={message.isSaved || savingRecipeId === message.id}
+                        className={`flex-1 ${
+                          message.isSaved 
+                            ? 'bg-green-500 hover:bg-green-600' 
+                            : 'bg-white hover:bg-gray-50 text-orange-500 border border-orange-500'
+                        }`}
+                      >
+                        {savingRecipeId === message.id ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : message.isSaved ? (
+                          <>
+                            <Heart className="w-4 h-4 mr-2 fill-current" />
+                            Saved
+                          </>
+                        ) : (
+                          <>
+                            <Heart className="w-4 h-4 mr-2" />
+                            Save Recipe
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={() => onStartCooking(message.recipe)}
+                        className="flex-1 bg-orange-500 hover:bg-orange-600"
+                      >
+                        <CookingPot className="w-4 h-4 mr-2" />
+                        Start Cooking
+                      </Button>
+                    </div>
+                  )}
                   {message.suggestions && (
                     <div className="flex flex-wrap gap-2 mt-3">
                       {message.suggestions.map((suggestion, idx) => (

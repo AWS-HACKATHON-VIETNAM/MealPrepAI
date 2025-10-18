@@ -33,6 +33,7 @@ export function RecipeDetailScreen({ recipe, onBack, onStartCooking }: RecipeDet
         ingredients: recipe.ingredients,
         steps: recipe.steps,
         image_url: recipe.image_url,
+        source_hash: recipe.source_hash,
       };
       await recipeService.saveRecipe(recipeToSave);
       setSuccessMessage('Recipe saved successfully!');

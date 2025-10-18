@@ -5,15 +5,62 @@ import { Progress } from './ui/progress';
 
 interface CookingModeScreenProps {
   onBack: () => void;
+  recipe?: any;
 }
 
-export function CookingModeScreen({ onBack }: CookingModeScreenProps) {
+interface Step {
+  step: number;
+  instruction: string;
+  duration: number;
+}
+
+// Extract steps from recipe and estimate durations
+const parseRecipeSteps = (recipe: any): Step[] => {
+  if (!recipe || !recipe.steps || recipe.steps.length === 0) {
+    return [
+      {
+        step: 1,
+        instruction: 'No steps available for this recipe.',
+        duration: 60,
+      },
+    ];
+  }
+
+  // Parse steps and try to extract time information
+  return recipe.steps.map((stepText: string, index: number) => {
+    // Remove "Step X:" prefix if it exists
+    let instruction = stepText.replace(/^Step \d+:\s*/i, '');
+    
+    // Try to extract time from step text (e.g., "7 minutes", "5-7 minutes")
+    const timeMatch = instruction.match(/(\d+)(?:-(\d+))?\s*(?:min|minute)/i);
+    let duration = 180; // Default 3 minutes per step
+    
+    if (timeMatch) {
+      const maxTime = timeMatch[2] ? parseInt(timeMatch[2]) : parseInt(timeMatch[1]);
+      duration = maxTime * 60; // Convert minutes to seconds
+    } else if (instruction.toLowerCase().includes('heat') || instruction.toLowerCase().includes('preheat')) {
+      duration = 300; // 5 minutes for heating
+    } else if (instruction.toLowerCase().includes('chop') || instruction.toLowerCase().includes('slice')) {
+      duration = 120; // 2 minutes for prep
+    } else if (instruction.toLowerCase().includes('cook') || instruction.toLowerCase().includes('fry')) {
+      duration = 420; // 7 minutes for cooking
+    }
+    
+    return {
+      step: index + 1,
+      instruction,
+      duration,
+    };
+  });
+};
+
+export function CookingModeScreen({ onBack, recipe }: CookingModeScreenProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(420); // 7 minutes in seconds
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
 
-  const steps = [
+  // Parse steps from recipe prop or use hardcoded example
+  const steps = recipe ? parseRecipeSteps(recipe) : [
     {
       step: 1,
       instruction: 'Season chicken breast with salt, pepper, and a drizzle of olive oil.',
@@ -40,6 +87,8 @@ export function CookingModeScreen({ onBack }: CookingModeScreenProps) {
       duration: 180,
     },
   ];
+
+  const [timeRemaining, setTimeRemaining] = useState(steps[0].duration);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -85,7 +134,7 @@ export function CookingModeScreen({ onBack }: CookingModeScreenProps) {
             <ChevronLeft className="w-6 h-6 text-gray-700" />
           </button>
           <div className="flex-1">
-            <h2 className="text-gray-900">Cooking Mode</h2>
+            <h2 className="text-gray-900">{recipe?.name || 'Cooking Mode'}</h2>
             <p className="text-gray-500 text-sm">
               Step {currentStep + 1} of {steps.length}
             </p>

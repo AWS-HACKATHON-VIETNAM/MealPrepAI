@@ -10,9 +10,12 @@ The original design is available at https://www.figma.com/design/TC2TjhdEgcwXCWx
 - 🔐 **Authentication**: User registration, login with JWT token management (access + refresh tokens)
 - 🍳 **Recipe Management**: 
   - AI-generated recipes based on user prompts
-  - Save and manage favorite recipes
+  - **Save recipes from chat** with visual feedback (Save Recipe button)
+  - **View all saved recipes** in organized grid with images
+  - **Delete saved recipes** with confirmation dialog
   - View detailed recipe information (ingredients, steps, macros, difficulty)
-  - Delete saved recipes
+  - **Step-by-step cooking mode** with automatic timers for each step
+  - Seamless workflow: Chat → Save → View → Cook
 - 🛒 **Grocery Lists**: 
   - Single unified grocery list (no multiple lists)
   - Add, edit, and delete grocery items
@@ -170,15 +173,18 @@ All endpoints use the base URL from `.env`: `VITE_API_BASE_URL`
 - `POST /recipes/generate/` - Generate AI recipe
   - Body: `{ prompt: string }`
   - Returns: `RecipeGenerateResponse`
+- `POST /recipes/save-recipes/` - **Save a generated recipe** for future use
+  - Body: Full `RecipeGenerateResponse` object from `/recipes/generate/`
+  - Process: Checks if recipe with same `source_hash` exists; if not, adds to `recipes` table and creates link in `user_saved_recipes`
+  - Returns: `201 Created` with `{ message: string }`
+- `GET /recipes/saved-recipes/` - **Retrieve all saved recipes** for the current user
+  - Process: Fetches all `recipe_ids` from `user_saved_recipes` and joins with `recipes` table
+  - Returns: `200 OK` with `Recipe[]`
+- `DELETE /recipes/saved-recipes/<id>/` - **Remove recipe from saved list**
+  - Process: Deletes entry from `user_saved_recipes` table
+  - Returns: `204 No Content`
 - `GET /recipes/pantry-suggestions/` - Get recipe suggestions based on pantry
   - Returns: `Recipe[]`
-- `GET /recipes/saved-recipes/` - List all saved recipes
-  - Returns: `Recipe[]`
-- `POST /recipes/save-recipes/` - Save a generated recipe
-  - Body: `RecipeGenerateResponse` object
-  - Returns: `{ message: string }`
-- `DELETE /recipes/saved-recipes/<id>/` - Delete saved recipe
-  - Returns: 204 No Content
 
 #### Grocery Lists (`/grocery/`)
 - `GET /grocery/grocery-list/` - List all grocery lists
@@ -278,6 +284,15 @@ recipeService.getPantrySuggestions()       // Get suggestions from pantry
 recipeService.getSavedRecipes()            // List saved recipes
 recipeService.saveRecipe(recipe)           // Save recipe to collection
 recipeService.deleteSavedRecipe(id)        // Remove saved recipe
+```
+
+#### `recipe.service.ts` - Recipe Operations
+```typescript
+recipeService.generateRecipe(request)      // Generate AI recipe
+recipeService.saveRecipe(recipe)           // Save recipe to user's collection
+recipeService.getSavedRecipes()            // List all saved recipes for user
+recipeService.deleteSavedRecipe(id)        // Remove saved recipe
+recipeService.getPantrySuggestions()       // Get suggestions from pantry
 ```
 
 #### `grocery.service.ts` - Grocery List Operations
@@ -540,9 +555,11 @@ The Vite build automatically:
 |--------|--------|---------------------|
 | LoginScreen | ✅ Complete | `/auth/register/`, `/auth/login/` |
 | ProfileScreen | ✅ Complete | `/auth/profile/`, `/auth/profile/update/` |
+| HomeScreen | ✅ Complete | `/recipes/generate/`, `/recipes/save-recipes/` + Cooking Mode |
 | RecipeListScreen | ✅ Complete | `/recipes/saved-recipes/` (GET) |
 | RecipeDetailScreen | ✅ Complete | `/recipes/save-recipes/` (POST) |
 | SavedRecipesScreen | ✅ Complete | `/recipes/saved-recipes/` (GET, DELETE) |
+| CookingModeScreen | ✅ Complete | Step-by-step with automatic timers |
 | GroceryListScreen | ✅ Complete | `/grocery/*` (all CRUD + add-to-pantry) |
 | PantryScreen | ✅ Complete | `/pantry/items/` (all CRUD operations) |
 | AuthContext | ✅ Complete | JWT token management & auto-refresh |
@@ -551,7 +568,6 @@ The Vite build automatically:
 
 ### 🚧 Pending Features
 
-- [ ] HomeScreen AI chat integration with `/recipes/generate/`
 - [ ] Recipe search and filtering
 - [ ] Profile edit forms
 - [ ] Image upload for recipes
@@ -572,11 +588,22 @@ The Vite build automatically:
 - [ ] Token auto-refresh on expired access token
 
 **Recipes:**
-- [ ] View saved recipes list
-- [ ] Click on recipe to see details
-- [ ] Save recipe from detail screen
-- [ ] Delete saved recipe
-- [ ] Empty state when no recipes
+- [ ] Generate recipe from chat prompt
+- [ ] View generated recipe in chat
+- [ ] Save recipe from chat (Save Recipe button)
+- [ ] Button shows loading state while saving
+- [ ] Button changes to "Saved ✓" after success
+- [ ] Navigate to Saved Recipes tab
+- [ ] View all saved recipes in grid
+- [ ] Click recipe card to view details
+- [ ] Delete saved recipe (trash icon)
+- [ ] Confirmation dialog before deletion
+- [ ] Start cooking mode from chat
+- [ ] Start cooking mode from saved recipe
+- [ ] Step-by-step cooking with timer
+- [ ] Timer automatically set per step
+- [ ] Navigate between steps
+- [ ] Complete cooking workflow
 
 **Grocery Lists:**
 - [ ] Create new grocery list

@@ -90,6 +90,7 @@ export interface RecipeGenerateResponse {
   }>;
   steps: string[];
   image_url?: string;
+  source_hash: string;
 }
 
 export interface GroceryList {
