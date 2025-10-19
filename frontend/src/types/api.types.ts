@@ -11,12 +11,12 @@ export interface UserProfile {
   email: string;
   first_name: string;
   last_name: string;
-  gender: 'male' | 'female' | 'other';
+  gender: 'male' | 'female' | 'other' | null;
   weight_kg: number | null;
   height_cm: number | null;
   preferences: string[]; // Array of food preferences
   allergies: string[]; // Array of allergies
-  goal: string | null;
+  goal: 'lose_fat' | 'gain_muscle' | 'maintain' | 'general_health' | null;
   updated_at: string;
 }
 
