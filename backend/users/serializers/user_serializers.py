@@ -53,3 +53,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if not isinstance(value, list):
             raise serializers.ValidationError("Allergies must be a list")
         return value
+
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop('user', {})
+
+        if user_data:
+            for attr, value in user_data.items():
+                setattr(instance.user, attr, value)
+            instance.user.save(update_fields=list(user_data.keys()))
+
+        return super().update(instance, validated_data)
