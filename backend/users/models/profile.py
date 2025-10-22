@@ -27,7 +27,7 @@ class UserProfile(models.Model):
     
     weight_kg = models.FloatField(null=True, blank=True)
     height_cm = models.FloatField(null=True, blank=True)
-    gender = models.CharField(null=True, choices = GENDER_CHOICES)
+    gender = models.CharField(null=True, choices = GENDER_CHOICES, max_length=10, blank=True)
     preferences = models.JSONField(default=list, blank=True)  # Array of strings
     allergies = models.JSONField(default=list, blank=True)    # Array of strings
     goal = models.CharField(max_length=50, choices=GOAL_CHOICES, null=True, blank=True)
