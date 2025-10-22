@@ -84,6 +84,11 @@ WSGI_APPLICATION = "personal_chef_project.wsgi.application"
 #     }
 # }
 
+# Empty database settings to be configured by django-on-heroku
+DATABASES = {
+    'default': {}
+}
+
 # Custom User Model
 AUTH_USER_MODEL = "users.User"
 
