@@ -57,7 +57,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
           <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mb-4">
             <ChefHat className="w-12 h-12 text-white" />
           </div>
-          <h1 className="text-orange-500 mb-2 text-2xl font-bold">Dishly</h1>
+          <h1 className="text-orange-500 mb-2 text-2xl font-bold">MealPrepAI</h1>
           <p className="text-gray-500 text-center">Your Personal Chef Assistant</p>
         </div>
 

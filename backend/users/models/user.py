@@ -18,7 +18,7 @@ class User(AbstractUser):
     username = models.CharField(max_length=150, unique=True, default=generate_username)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = []  # Empty since username is auto-generated and email is USERNAME_FIELD
-
+    # REQUIRED_FIELDS = []  # Empty since username is auto-generated and email is USERNAME_FIELD
+    REQUIRED_FIELDS = ['username']
     def __str__(self):
         return self.email

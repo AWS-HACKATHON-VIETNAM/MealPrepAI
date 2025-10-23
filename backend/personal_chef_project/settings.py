@@ -72,6 +72,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "personal_chef_project.wsgi.application"
 
+# Setup for VPS deployment + localhost development
 # Database
 DATABASES = {
     "default": {
@@ -147,3 +148,5 @@ CORS_ALLOW_CREDENTIALS = True
 
 # External API Keys
 AWS_BEDROCK_REGION = config("AWS_BEDROCK_REGION", default="us-east-1")
+
+# Configure Django app for Heroku.
