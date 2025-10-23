@@ -72,21 +72,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "personal_chef_project.wsgi.application"
 
-# # Database
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": config("DB_NAME", default="personal_chef_db"),
-#         "USER": config("DB_USER", default="postgres"),
-#         "PASSWORD": config("DB_PASSWORD", default="password"),
-#         "HOST": config("DB_HOST", default="localhost"),
-#         "PORT": config("DB_PORT", default="5432"),
-#     }
-# }
-
-# Empty database settings to be configured by django-on-heroku
+# Setup for VPS deployment + localhost development
+# Database
 DATABASES = {
-    'default': {}
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": config("DB_NAME", default="personal_chef_db"),
+        "USER": config("DB_USER", default="postgres"),
+        "PASSWORD": config("DB_PASSWORD", default="password"),
+        "HOST": config("DB_HOST", default="localhost"),
+        "PORT": config("DB_PORT", default="5432"),
+    }
 }
 
 # Custom User Model
@@ -154,6 +150,3 @@ CORS_ALLOW_CREDENTIALS = True
 AWS_BEDROCK_REGION = config("AWS_BEDROCK_REGION", default="us-east-1")
 
 # Configure Django app for Heroku.
-
-import django_on_heroku
-django_on_heroku.settings(locals())
